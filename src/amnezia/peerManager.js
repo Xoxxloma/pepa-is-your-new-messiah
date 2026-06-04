@@ -45,6 +45,10 @@ export function createPeer(clientName) {
     const usedIps = [...server.usedIps, ...usedIpsFromTable(table)];
     const clientIp = allocateIp(server.serverAddress, usedIps);
 
+    // Если имя не задано — делаем уникальное по последнему октету IP,
+    // чтобы файлы/записи не совпадали (client-13, client-14, …).
+    const name = clientName || `client-${clientIp.split('.').pop()}`;
+
     const keys = await generateClientKeys(server.variant.wg);
 
     const clientConfigText = buildClientConfig({
@@ -71,7 +75,7 @@ export function createPeer(clientName) {
     await exec(['tee', '-a', server.variant.conf], { input: peerBlock });
 
     // 2) зарегистрировать клиента в clientsTable (в исходном формате файла)
-    await addClient(table, { clientPubKey: keys.pubKey, clientName, clientIp });
+    await addClient(table, { clientPubKey: keys.pubKey, clientName: name, clientIp });
 
     // 3) применить в рантайме без обрыва соединений
     await applyRuntimeConfig(server.variant);
@@ -94,6 +98,6 @@ export function createPeer(clientName) {
     });
     const vpnLink = encodeVpn(amneziaConfig);
 
-    return { clientName, clientIp, vpnLink, clientConfigText };
+    return { clientName: name, clientIp, vpnLink, clientConfigText };
   });
 }

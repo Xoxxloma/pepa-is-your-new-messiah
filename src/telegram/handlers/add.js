@@ -4,16 +4,18 @@ import { createPeer } from '../../amnezia/peerManager.js';
 import { buildQrPng } from '../../builders/qr.js';
 
 // Очищает имя клиента: только [A-Za-z0-9_.-], до 32 символов.
-function sanitizeName(input, fallback) {
+// Если после очистки пусто — возвращает null (имя задаст peerManager по IP).
+function sanitizeName(input) {
   const cleaned = (input || '').trim().replace(/[^A-Za-z0-9_.-]/g, '_').slice(0, 32);
-  return cleaned || fallback;
+  return cleaned || null;
 }
 
 export async function handleAdd(ctx) {
-  const fallback = `tg${ctx.from.id}`;
-  const clientName = sanitizeName(ctx.match, fallback);
+  // Имя из аргумента команды; если не задано — null, тогда peerManager
+  // сгенерирует уникальное имя по выданному IP (client-<последний октет>).
+  const clientName = sanitizeName(ctx.match);
 
-  const notice = await ctx.reply(`⏳ Создаю сертификат «${clientName}»…`);
+  const notice = await ctx.reply('⏳ Создаю сертификат…');
 
   let result;
   try {
@@ -27,11 +29,11 @@ export async function handleAdd(ctx) {
     ctx.api.deleteMessage(ctx.chat.id, notice.message_id).catch(() => {});
   }
 
-  const { clientIp, vpnLink, clientConfigText } = result;
+  const { clientName: finalName, clientIp, vpnLink, clientConfigText } = result;
 
   // 1) строка vpn:// (моноширинно, чтобы удобно копировать)
   await ctx.reply(
-    `✅ Готово: «${clientName}» (IP ${clientIp})\n\n` +
+    `✅ Готово: «${finalName}» (IP ${clientIp})\n\n` +
       `🔗 Строка для импорта (Amnezia → добавить → вставить ключ):\n` +
       `<code>${escapeHtml(vpnLink)}</code>`,
     { parse_mode: 'HTML' },
@@ -39,13 +41,13 @@ export async function handleAdd(ctx) {
 
   // 2) файл-конфиг
   await ctx.replyWithDocument(
-    new InputFile(Buffer.from(clientConfigText, 'utf8'), `${clientName}.conf`),
+    new InputFile(Buffer.from(clientConfigText, 'utf8'), `${finalName}.conf`),
     { caption: '📄 Файл конфигурации (.conf)' },
   );
 
   // 3) QR-код строки vpn://
   const qr = await buildQrPng(vpnLink);
-  await ctx.replyWithPhoto(new InputFile(qr, `${clientName}.png`), {
+  await ctx.replyWithPhoto(new InputFile(qr, `${finalName}.png`), {
     caption: '📷 QR-код (скан в мобильном клиенте Amnezia)',
   });
 }
