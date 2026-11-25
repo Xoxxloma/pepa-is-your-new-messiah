@@ -1,4 +1,5 @@
 import 'dotenv/config';
+import { parsePort } from './builders/endpoint.js';
 
 function required(name) {
   const v = process.env[name];
@@ -26,6 +27,8 @@ export const config = {
   adminIds,
   container: (process.env.CONTAINER || 'amnezia-awg').trim(),
   endpointHost: (process.env.ENDPOINT_HOST || '').trim(),
+  endpointPort: process.env.ENDPOINT_PORT?.trim()
+    ? parsePort(process.env.ENDPOINT_PORT.trim(), 'ENDPOINT_PORT') : null,
   dns1: (process.env.DNS1 || '1.1.1.1').trim(),
   dns2: (process.env.DNS2 || '1.0.0.1').trim(),
   serverDescription: (process.env.SERVER_DESCRIPTION || 'Amnezia VPN').trim(),

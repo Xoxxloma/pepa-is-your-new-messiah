@@ -7,7 +7,9 @@
   "scripts": {
     "start": "node src/index.js",
     "inspect": "node src/inspect.js",
-    "check": "node src/builders/vpnLink.selfcheck.js"
+    "check": "node src/builders/vpnLink.selfcheck.js",
+    "test": "node --test test/two-vps.test.js",
+    "deploy:two-vps": "node deploy/two-vps.js"
   },
   "engines": {
     "node": ">=18"

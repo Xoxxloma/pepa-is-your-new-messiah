@@ -1,3 +1,5 @@
 node_modules/
 .env
 *.log
+deploy/two-vps.json
+.two-vps-state.json

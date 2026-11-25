@@ -37,6 +37,7 @@ nano .env            # заполнить BOT_TOKEN, ADMIN_IDS, ENDPOINT_HOST
 | `BOT_TOKEN` | токен от [@BotFather](https://t.me/BotFather) |
 | `ADMIN_IDS` | разрешённые Telegram ID через запятую (свой ID — у [@userinfobot](https://t.me/userinfobot)) |
 | `ENDPOINT_HOST` | **IP или домен VPS** — попадёт в `Endpoint` клиента |
+| `ENDPOINT_PORT` | публичный UDP-порт точки входа; если пусто, используется `ListenPort` AmneziaWG |
 | `CONTAINER` | имя контейнера (по умолчанию `amnezia-awg`) |
 | `DNS1`, `DNS2` | DNS клиента (по умолчанию 1.1.1.1 / 1.0.0.1) |
 | `SERVER_DESCRIPTION` | подпись сервера в приложении |
@@ -48,6 +49,25 @@ npm start
 ```
 
 Пользователь, под которым работает бот, должен иметь доступ к `docker` (root или группа `docker`).
+
+### Российский вход + зарубежный выход
+
+Можно добавить перед текущим зарубежным VPS российский UDP-ретранслятор.
+Бот и AmneziaWG остаются на зарубежном сервере, а новые клиентские профили получают
+российский endpoint. Весь пользовательский трафик выходит через зарубежный VPS.
+
+После подготовки двух серверов и `deploy/two-vps.json`:
+
+```bash
+npm run deploy:two-vps              # локальный план без подключения к VPS
+npm run deploy:two-vps -- --apply   # установка relay и настройка endpoint бота
+npm run deploy:two-vps -- --check   # проверка конфигурации и сервисов
+```
+
+В PowerShell при блокировке `npm.ps1` используй `npm.cmd`.
+Требования, подготовка SSH, перенос существующих профилей и откат описаны в
+[инструкции двух VPS](deploy/README.md). Скрипт предполагает, что AmneziaWG и бот
+уже работают на зарубежном VPS; установка AmneziaVPN с нуля в него не входит.
 
 ### Автозапуск (systemd)
 

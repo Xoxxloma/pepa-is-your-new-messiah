@@ -1,4 +1,5 @@
 import { config } from '../config.js';
+import { resolveEndpoint } from '../builders/endpoint.js';
 import { buildClientConfig, buildServerPeerBlock } from '../builders/wgquick.js';
 import { buildAmneziaConfig, encodeVpn } from '../builders/vpnLink.js';
 import { peerLock } from '../util/lock.js';
@@ -24,22 +25,12 @@ async function applyRuntimeConfig({ wg, wgquick, iface, conf }) {
   await exec(['sh', '-c', script]);
 }
 
-function resolveEndpoint(serverConfig) {
-  const host = config.endpointHost;
-  if (!host) {
-    throw new Error(
-      'Не задан адрес сервера. Укажи ENDPOINT_HOST в .env (IP или домен VPS) — он попадёт в Endpoint клиента.',
-    );
-  }
-  return { host, endpoint: `${host}:${serverConfig.listenPort}` };
-}
-
 // Главная операция /add. Выполняется строго по одной (мьютекс).
 // clientName — уже валидированное имя клиента.
 export function createPeer(clientName) {
   return peerLock.run(async () => {
     const server = await readServerConfig();
-    const { host, endpoint } = resolveEndpoint(server);
+    const { host, port, endpoint } = resolveEndpoint(config.endpointHost, config.endpointPort, server.listenPort);
 
     const table = await readClientsTable();
     const usedIps = [...server.usedIps, ...usedIpsFromTable(table)];
@@ -83,7 +74,7 @@ export function createPeer(clientName) {
     // 4) собрать артефакты для шаринга
     const amneziaConfig = buildAmneziaConfig({
       hostName: host,
-      port: server.listenPort,
+      port,
       obfuscation: server.obfuscation,
       clientIp,
       clientPrivKey: keys.privKey,

@@ -8,6 +8,7 @@ import { exec } from './amnezia/docker.js';
 import { allocateIp } from './amnezia/ipalloc.js';
 import { readServerConfig } from './amnezia/serverConfig.js';
 import { config } from './config.js';
+import { resolveEndpoint } from './builders/endpoint.js';
 
 function mask(key) {
   if (!key || key.length < 12) return key;
@@ -48,7 +49,9 @@ async function main() {
   const nextIp = allocateIp(server.serverAddress, allUsed);
   console.log('Проверка выдачи:');
   console.log(`  следующий свободный IP: ${nextIp}`);
-  console.log(`  endpoint клиента      : ${config.endpointHost || '(ENDPOINT_HOST не задан!)'}:${server.listenPort}\n`);
+  console.log(`  endpoint клиента      : ${config.endpointHost
+    ? resolveEndpoint(config.endpointHost, config.endpointPort, server.listenPort).endpoint
+    : '(ENDPOINT_HOST не задан!)'}\n`);
 
   // Простая сверка целостности
   const warnings = [];

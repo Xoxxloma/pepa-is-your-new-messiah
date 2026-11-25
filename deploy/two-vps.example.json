@@ -1,0 +1,14 @@
+{
+  "entry": {
+    "host": "203.0.113.10",
+    "sshPort": 22,
+    "port": 51820
+  },
+  "exit": {
+    "host": "198.51.100.20",
+    "sshPort": 22,
+    "container": "amnezia-awg",
+    "botDir": "/root/amnezia-bot",
+    "botService": "amnezia-bot.service"
+  }
+}
